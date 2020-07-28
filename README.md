@@ -12,6 +12,21 @@ Resource addresses are described by the [Terraform documentation][3].
 
 Identifiers are described in the [Terraform Configuration Syntax document][4]
 
+## Generating
+
+If you change the peg, please regenerate the go code with:
+
+```sh
+go get -u github.com/mna/pigeon
+go generate .
+```
+
+You may need to clean up the go.mod with:
+
+```sh
+go mod tidy
+```
+
 ## Examples
 
 ```go
