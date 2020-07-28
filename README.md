@@ -1,5 +1,7 @@
 # tf-address
 
+[![CircleCI](https://circleci.hashicorp.engineering/gh/hashicorp/go-tf-address.svg?style=svg&circle-token=52f4c3c3714e15da2b71de073cb61b7948be8fa7)](https://circleci.hashicorp.engineering/gh/hashicorp/go-tf-address)
+
 This package provides utilities for properly parsing Terraform addresses.
 
 The parser is implemented using [pigeon][1], a [PEG][2] implementation.
