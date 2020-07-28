@@ -13,7 +13,6 @@ Identifiers are described in the [Terraform Configuration Syntax document][4]
 ## Examples
 
 ```go
-```
 import "github.com/hashicorp/tf-address"
 
 a, err := address.Parse(`module.first.module.second["xyz"].resource.name[2]`)
