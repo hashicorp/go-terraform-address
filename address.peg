@@ -1,0 +1,122 @@
+{
+package address
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
+	"unicode"
+	"unicode/utf8"
+)
+
+func toIfaceSlice(v interface{}) []interface{} {
+    if v == nil {
+        return nil
+    }
+    return v.([]interface{})
+}
+
+}
+
+/*
+https://www.terraform.io/docs/internals/resource-addressing.html
+*/
+
+// [module path][resource spec]
+Address = m:(Module ".")* r:ResourceSpec EOF {
+    mi := toIfaceSlice(m)
+    v := make(ModulePath, len(mi))
+    for i, mp := range mi {
+        v[i] = toIfaceSlice(mp)[0].(Module)
+    }
+    return &Address{
+        v,
+        r.(ResourceSpec),
+    }, nil
+}
+
+// module.module_name[module index]
+Module = "module." name:Identifier i:Index? {
+    if i != nil {
+        return Module{
+            Name: name.(string),
+            Index: i.(Index),
+        }, nil
+    } else {
+        return Module{
+            Name: name.(string),
+        }, nil
+    }
+}
+
+// resource_type.resource_name[resource index]
+ResourceSpec = rType:Identifier "." name:Identifier i:Index? {
+    if i != nil {
+        return ResourceSpec{
+            Type: rType.(string),
+            Name: name.(string),
+            Index: i.(Index),
+        }, nil
+    } else {
+        return ResourceSpec{
+            Type: rType.(string),
+            Name: name.(string),
+        }, nil
+    }
+}
+
+/*
+* Index can be one of
+
+  - [N] where N is a 0-based numerical index into a resource with multiple
+    instances specified by the count meta-argument. Omitting an index when
+    addressing a resource where count > 1 means that the address references
+    all instances.
+  - ["INDEX"] where INDEX is a alphanumerical key index into
+    a resource with multiple instances specified by the for_each
+    meta-argument.
+
+https://github.com/hashicorp/terraform/blob/ef071f3d0e49ba421ae931c65b263827a8af1adb/website/docs/internals/resource-addressing.html.markdown#index-values-for-modules-and-resources
+*/
+Index = "[" i:(Integer / String) "]" {
+    return Index{Value:i}, nil
+}
+
+String = '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
+    c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)
+    return strconv.Unquote(string(c.text))
+} / '"' ( !EscapedChar . / '\\' EscapeSequence )* !'"' {
+	return nil, errors.New("string literal not terminated")
+}
+
+/*
+Identifiers can contain letters, digits, underscores (_), and hyphens (-). The
+first character of an identifier must not be a digit, to avoid ambiguity with
+literal numbers.
+https://www.terraform.io/docs/configuration/syntax.html#identifiers
+
+*/
+Identifier = [a-z_-]i [a-zA-Z0-9_-]i* {
+    return string(c.text), nil
+}
+
+Integer = '-'? [0-9]+ {
+    return strconv.Atoi(string(c.text))
+}
+
+EscapedChar = [\x00-\x1f"\\]
+
+EscapeSequence = SingleCharEscape / UnicodeEscape
+
+SingleCharEscape = ["\\/bfnrt]
+
+UnicodeEscape = 'u' HexDigit HexDigit HexDigit HexDigit
+
+HexDigit = [0-9a-f]i
+
+EOF = !.
