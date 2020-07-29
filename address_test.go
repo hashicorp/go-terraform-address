@@ -93,3 +93,17 @@ func TestEmptyModule(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, a.ModulePath.String())
 }
+
+func TestCopy(t *testing.T) {
+	orig := `module.a["xyz"].module.b.foo.bar["xyz"]`
+	expected := `module.c.module.b["abc"].foo.baz["xyz"]`
+	a, err := NewAddress(orig)
+	require.NoError(t, err)
+	b := a.Clone()
+	b.ModulePath[0] = Module{Name: "c"}
+	b.ModulePath[1].Index = Index{"abc"}
+	b.ResourceSpec.Name = "baz"
+
+	require.Equal(t, expected, b.String())
+	require.Equal(t, orig, a.String())
+}

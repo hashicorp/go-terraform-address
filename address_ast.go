@@ -19,6 +19,15 @@ func NewAddress(a string) (*Address, error) {
 	return addr.(*Address), nil
 }
 
+func (a *Address) Clone() *Address {
+	mp := make(ModulePath, len(a.ModulePath))
+	copy(mp, a.ModulePath)
+	return &Address{
+		mp,
+		a.ResourceSpec,
+	}
+}
+
 func (a *Address) String() string {
 	var prefix string
 	if len(a.ModulePath) > 0 {
