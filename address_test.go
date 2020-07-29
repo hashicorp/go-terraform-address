@@ -81,3 +81,9 @@ func TestInvalidAddresses(t *testing.T) {
 		})
 	}
 }
+
+func TestNewAddress(t *testing.T) {
+	a, err := NewAddress("foo.bar")
+	require.NoError(t, err)
+	require.Equal(t, "foo.bar", a.String())
+}

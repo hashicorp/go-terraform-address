@@ -10,6 +10,15 @@ type Address struct {
 	ResourceSpec ResourceSpec
 }
 
+// NewAddress parses the given address `a` into an Address struct
+func NewAddress(a string) (*Address, error) {
+	addr, err := Parse(a, []byte(a))
+	if err != nil {
+		return nil, err
+	}
+	return addr.(*Address), nil
+}
+
 func (a *Address) String() string {
 	var prefix string
 	if len(a.ModulePath) > 0 {
