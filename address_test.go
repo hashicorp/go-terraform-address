@@ -87,3 +87,9 @@ func TestNewAddress(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "foo.bar", a.String())
 }
+
+func TestEmptyModule(t *testing.T) {
+	a, err := NewAddress("foo.bar")
+	require.NoError(t, err)
+	require.Empty(t, a.ModulePath.String())
+}
