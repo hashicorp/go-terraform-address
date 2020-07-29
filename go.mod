@@ -1,4 +1,4 @@
-module github.com/hashicorp/tf-address
+module github.com/hashicorp/go-terraform-address
 
 go 1.14
 

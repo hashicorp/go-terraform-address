@@ -1,6 +1,6 @@
 # tf-address
 
-[![CircleCI](https://circleci.hashicorp.engineering/gh/hashicorp/go-tf-address.svg?style=svg&circle-token=52f4c3c3714e15da2b71de073cb61b7948be8fa7)](https://circleci.hashicorp.engineering/gh/hashicorp/go-tf-address)
+[![CircleCI](https://circleci.hashicorp.engineering/gh/hashicorp/go-terraform-address.svg?style=svg&circle-token=52f4c3c3714e15da2b71de073cb61b7948be8fa7)](https://circleci.hashicorp.engineering/gh/hashicorp/go-terraform-address)
 
 This package provides utilities for properly parsing Terraform addresses.
 
@@ -30,7 +30,7 @@ go mod tidy
 ## Examples
 
 ```go
-import "github.com/hashicorp/tf-address"
+import "github.com/hashicorp/go-terraform-address"
 
 a, err := address.Parse(`module.first.module.second["xyz"].resource.name[2]`)
 
