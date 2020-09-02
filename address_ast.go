@@ -67,18 +67,17 @@ type Index struct {
 	Value interface{}
 }
 
-// String representation of an index. The index value will be contained within
-// square brackets ("[]"). If the index is a string, it will be quoted and
-// escaped using go's string escaping semantics.
+// String representation of an index. If the index is a string, it will be
+// quoted and escaped using go's string escaping semantics.
 func (i *Index) String() string {
 	if i == nil || i.Value == nil {
 		return ""
 	}
 	switch v := i.Value.(type) {
 	case int:
-		return fmt.Sprintf("[%d]", v)
+		return fmt.Sprintf("%d", v)
 	case string:
-		return fmt.Sprintf("[%q]", v)
+		return fmt.Sprintf("%q", v)
 	default:
 		panic(fmt.Errorf("got unknown type %T", v))
 	}
@@ -96,7 +95,10 @@ type Module struct {
 // String representation of the module. The literal `module.` will be
 // prepended.
 func (m *Module) String() string {
-	return fmt.Sprintf("module.%s%s", m.Name, m.Index.String())
+	if idx := m.Index.String(); idx != "" {
+		return fmt.Sprintf("module.%s[%s]", m.Name, idx)
+	}
+	return fmt.Sprintf("module.%s", m.Name)
 }
 
 // ResourceSpec describes the resource of an address.
@@ -109,5 +111,8 @@ type ResourceSpec struct {
 
 // String representation of the resource component of an address.
 func (r *ResourceSpec) String() string {
-	return fmt.Sprintf("%s.%s%s", r.Type, r.Name, r.Index.String())
+	if idx := r.Index.String(); idx != "" {
+		return fmt.Sprintf("%s.%s[%s]", r.Type, r.Name, idx)
+	}
+	return fmt.Sprintf("%s.%s", r.Type, r.Name)
 }

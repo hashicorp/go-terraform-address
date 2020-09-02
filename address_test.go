@@ -41,6 +41,26 @@ func TestValidAddresses(t *testing.T) {
 	}
 }
 
+func TestIndex(t *testing.T) {
+	var tests = []struct {
+		name     string
+		expected string
+		given    string
+	}{
+		{"string", `"foo"`, `module.foo["foo"].a.b["foo"]`},
+		{"int", "123", "module.foo[123].a.b[123]"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a, err := NewAddress(tt.given)
+			require.NoError(t, err)
+			require.Equal(t, a.ResourceSpec.Index.String(), tt.expected)
+			require.Equal(t, a.ModulePath[0].Index.String(), tt.expected)
+		})
+	}
+
+}
+
 func TestIndexEdgecases(t *testing.T) {
 	var tests = []string{
 		`foo"bar"`,
