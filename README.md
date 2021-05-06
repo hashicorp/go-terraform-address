@@ -30,17 +30,29 @@ go mod tidy
 ## Examples
 
 ```go
-import "github.com/hashicorp/go-terraform-address"
+package main
 
-a, err := address.Parse(`module.first.module.second["xyz"].resource.name[2]`)
+import (
+	"fmt"
 
-len(a.ModulePath) // 2
-a.ModulePath[0].Name // "first"
-a.ModulePath[1].Index.String() // "xyz"
-fmt.Printf("%T", a.ModulePath[1].Index.Value) // String
-a.ResourceSpec.Type // "resource"
-a.ResourceSpec.Name // "name"
-fmt.Printf("%T", a.ResourceSpec.Index.Value) // int
+	address "github.com/hashicorp/go-terraform-address"
+)
+
+func main() {
+
+	a, err := address.NewAddress(`module.first.module.second["xyz"].resource.name[2]`)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(len(a.ModulePath))                  // 2
+	fmt.Println(a.ModulePath[0].Name)               // "first"
+	fmt.Println(a.ModulePath[1].Index.String())     // "xyz"
+	fmt.Printf("%T\n", a.ModulePath[1].Index.Value) // string
+	fmt.Println(a.ResourceSpec.Type)                // "resource"
+	fmt.Println(a.ResourceSpec.Name)                // "name"
+	fmt.Printf("%T\n", a.ResourceSpec.Index.Value)  // int
+}
 ```
 
 
