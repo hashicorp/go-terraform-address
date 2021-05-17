@@ -1,11 +1,29 @@
 package address
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
+
+const testdata = "./testdata/config/addresses"
+
+func getTestAddresses(t *testing.T) []string {
+	f, err := os.Open(testdata)
+	require.NoError(t, err)
+
+	scanner := bufio.NewScanner(f)
+	lines := []string{}
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	require.NoError(t, scanner.Err())
+
+	return lines
+}
 
 func TestValidAddresses(t *testing.T) {
 	var tests = []struct {
@@ -29,6 +47,7 @@ func TestValidAddresses(t *testing.T) {
 		{`module.a[0].foo.bar[0]`},
 		{`module.a[0].module.b.foo.bar`},
 		{`module.a[0].module.b.foo.bar[0]`},
+		{`module.data.module.b.data.data`},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -58,7 +77,6 @@ func TestIndex(t *testing.T) {
 			require.Equal(t, a.ModulePath[0].Index.String(), tt.expected)
 		})
 	}
-
 }
 
 func TestIndexEdgecases(t *testing.T) {
@@ -126,4 +144,16 @@ func TestCopy(t *testing.T) {
 
 	require.Equal(t, expected, b.String())
 	require.Equal(t, orig, a.String())
+}
+
+func TestGeneratedAdddresses(t *testing.T) {
+	addresses := getTestAddresses(t)
+	for _, tt := range addresses {
+		t.Run(tt, func(t *testing.T) {
+			a, err := Parse(tt, []byte(tt)) //, Debug(true))
+			require.NoError(t, err)
+			require.IsType(t, &Address{}, a)
+			require.Equal(t, tt, a.(*Address).String())
+		})
+	}
 }

@@ -13,6 +13,11 @@ import (
 	"strings"
 )
 
+type Addressable interface {
+	String() string
+	// TODO: way to get module/other info?
+}
+
 // Address holds the parsed components of a Terraform address.
 type Address struct {
 	ModulePath   ModulePath
@@ -115,4 +120,22 @@ func (r *ResourceSpec) String() string {
 		return fmt.Sprintf("%s.%s[%s]", r.Type, r.Name, idx)
 	}
 	return fmt.Sprintf("%s.%s", r.Type, r.Name)
+}
+
+// DataSourceAddress holds the parsed components of a data source address.
+type DataSourceAddress struct {
+	ModulePath   ModulePath
+	ResourceSpec ResourceSpec
+}
+
+// NewDataSourceAddress parses the given address `a` into an Address struct. Returns an
+// error if we find a malformed address.
+// [module path][resource spec]
+func NewDataSourceAddress(a string) (*DataSourceAddress, error) {
+	addr, err := Parse(a, []byte(a))
+	if err != nil {
+		return nil, err
+	}
+	// TODO: error check
+	return addr.(*DataSourceAddress), nil
 }

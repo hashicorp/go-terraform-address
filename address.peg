@@ -42,32 +42,25 @@ Address = m:(Module ".")* r:ResourceSpec EOF {
 
 // module.module_name[module index]
 Module = "module." name:Identifier i:Index? {
-    if i != nil {
-        return Module{
-            Name: name.(string),
-            Index: i.(Index),
-        }, nil
-    } else {
-        return Module{
-            Name: name.(string),
-        }, nil
+    m := Module{
+        Name: name.(string),
     }
+    if i != nil {
+        m.Index = i.(Index)
+    }
+    return m, nil
 }
 
 // resource_type.resource_name[resource index]
 ResourceSpec = rType:Identifier "." name:Identifier i:Index? {
-    if i != nil {
-        return ResourceSpec{
-            Type: rType.(string),
-            Name: name.(string),
-            Index: i.(Index),
-        }, nil
-    } else {
-        return ResourceSpec{
-            Type: rType.(string),
-            Name: name.(string),
-        }, nil
+    r := ResourceSpec{
+        Type: rType.(string),
+        Name: name.(string),
     }
+    if i != nil {
+        r.Index = i.(Index)
+    }
+    return r, nil
 }
 
 /*
@@ -86,6 +79,44 @@ https://github.com/hashicorp/terraform/blob/ef071f3d0e49ba421ae931c65b263827a8af
 Index = "[" i:(Integer / String) "]" {
     return Index{Value:i}, nil
 }
+
+/*
+Data sources
+
+---
+Reference expressions [take the form of] data.<TYPE>.<NAME>.<ATTRIBUTE>
+https://www.terraform.io/docs/configuration/data-sources.html#description
+
+---
+A data block requests that Terraform read from a given data source ("aws_ami")
+and export the result under the given local name ("example"). The name is used
+to refer to this resource from elsewhere in the same Terraform module, but has
+no significance outside of the scope of a module.
+
+The data source and name together serve as an identifier for a given resource
+and so must be unique within a module.
+
+https://www.terraform.io/docs/configuration/data-sources.html#using-data-sources
+
+---
+Data resources support count and for_each meta-arguments as defined for managed
+resources, with the same syntax and behavior.
+
+https://www.terraform.io/docs/configuration/data-sources.html#multiple-resource-instances
+
+module.main[0].data.null_data_source.count[0]
+*/
+DataAddress = m:(Module ".")* "data." r:ResourceSpec EOF {
+    addr := &DataSourceAddress{
+        Type: t.(string),
+        Name: n.(string),
+    }
+    if i != nil {
+        addr.Index = i.(Index)
+    }
+    return addr, nil
+}
+
 
 String = '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
     c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)
