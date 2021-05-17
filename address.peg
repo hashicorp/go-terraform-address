@@ -23,12 +23,16 @@ func toIfaceSlice(v interface{}) []interface{} {
 
 }
 
+Address = a:(DataAddress / ResourceAddress) EOF {
+    return a, nil
+}
+
 /*
 https://www.terraform.io/docs/internals/resource-addressing.html
 */
 
 // [module path][resource spec]
-Address = m:(Module ".")* r:ResourceSpec EOF {
+ResourceAddress = m:(Module ".")* r:ResourceSpec {
     mi := toIfaceSlice(m)
     v := make(ModulePath, len(mi))
     for i, mp := range mi {
@@ -37,6 +41,46 @@ Address = m:(Module ".")* r:ResourceSpec EOF {
     return &Address{
         v,
         r.(ResourceSpec),
+        ManagedResourceMode,
+    }, nil
+}
+
+/*
+Data sources
+
+---
+Reference expressions [take the form of] data.<TYPE>.<NAME>.<ATTRIBUTE>
+https://www.terraform.io/docs/configuration/data-sources.html#description
+
+---
+A data block requests that Terraform read from a given data source ("aws_ami")
+and export the result under the given local name ("example"). The name is used
+to refer to this resource from elsewhere in the same Terraform module, but has
+no significance outside of the scope of a module.
+
+The data source and name together serve as an identifier for a given resource
+and so must be unique within a module.
+
+https://www.terraform.io/docs/configuration/data-sources.html#using-data-sources
+
+---
+Data resources support count and for_each meta-arguments as defined for managed
+resources, with the same syntax and behavior.
+
+https://www.terraform.io/docs/configuration/data-sources.html#multiple-resource-instances
+
+module.main[0].data.null_data_source.count[0]
+*/
+DataAddress = m:(Module ".")* "data."i r:ResourceSpec {
+    mi := toIfaceSlice(m)
+    v := make(ModulePath, len(mi))
+    for i, mp := range mi {
+        v[i] = toIfaceSlice(mp)[0].(Module)
+    }
+    return &Address{
+        v,
+        r.(ResourceSpec),
+        DataResourceMode,
     }, nil
 }
 
@@ -79,44 +123,6 @@ https://github.com/hashicorp/terraform/blob/ef071f3d0e49ba421ae931c65b263827a8af
 Index = "[" i:(Integer / String) "]" {
     return Index{Value:i}, nil
 }
-
-/*
-Data sources
-
----
-Reference expressions [take the form of] data.<TYPE>.<NAME>.<ATTRIBUTE>
-https://www.terraform.io/docs/configuration/data-sources.html#description
-
----
-A data block requests that Terraform read from a given data source ("aws_ami")
-and export the result under the given local name ("example"). The name is used
-to refer to this resource from elsewhere in the same Terraform module, but has
-no significance outside of the scope of a module.
-
-The data source and name together serve as an identifier for a given resource
-and so must be unique within a module.
-
-https://www.terraform.io/docs/configuration/data-sources.html#using-data-sources
-
----
-Data resources support count and for_each meta-arguments as defined for managed
-resources, with the same syntax and behavior.
-
-https://www.terraform.io/docs/configuration/data-sources.html#multiple-resource-instances
-
-module.main[0].data.null_data_source.count[0]
-*/
-DataAddress = m:(Module ".")* "data." r:ResourceSpec EOF {
-    addr := &DataSourceAddress{
-        Type: t.(string),
-        Name: n.(string),
-    }
-    if i != nil {
-        addr.Index = i.(Index)
-    }
-    return addr, nil
-}
-
 
 String = '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
     c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)

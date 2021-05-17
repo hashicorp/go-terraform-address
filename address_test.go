@@ -55,6 +55,43 @@ func TestValidAddresses(t *testing.T) {
 			a, err := Parse(tt.name, []byte(tt.name)) //, Debug(true))
 			require.NoError(t, err)
 			require.IsType(t, &Address{}, a)
+			require.Equal(t, ManagedResourceMode, a.(*Address).Mode)
+			require.Equal(t, tt.name, a.(*Address).String())
+		})
+	}
+}
+
+func TestValidDataAddresses(t *testing.T) {
+	var tests = []struct {
+		name string
+	}{
+		{"data.module.module"},
+		{"data.foo.bar"},
+		{`data.foo.bar["xyz"]`},
+		{`module.a.data.foo.bar`},
+		{`module.a.data.foo.bar["xyz"]`},
+		{`module.a.module.b.data.foo.bar`},
+		{`module.a.module.b.data.foo.bar["xyz"]`},
+		{`module.a["xyz"].data.foo.bar`},
+		{`module.a["xyz"].data.foo.bar["xyz"]`},
+		{`module.a["xyz"].module.b.data.foo.bar`},
+		{`module.a["xyz"].module.b.data.foo.bar["xyz"]`},
+		{`module.a.data.foo.bar[0]`},
+		{`module.a.module.b.data.foo.bar`},
+		{`module.a.module.b.data.foo.bar[0]`},
+		{`module.a[0].data.foo.bar`},
+		{`module.a[0].data.foo.bar[0]`},
+		{`module.a[0].module.b.data.foo.bar`},
+		{`module.a[0].module.b.data.foo.bar[0]`},
+		{`module.data.module.b.data.data.data`},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			a, err := Parse(tt.name, []byte(tt.name)) //, Debug(true))
+			require.NoError(t, err)
+			require.IsType(t, &Address{}, a)
+			require.Equal(t, DataResourceMode, a.(*Address).Mode)
 			require.Equal(t, tt.name, a.(*Address).String())
 		})
 	}
@@ -146,7 +183,7 @@ func TestCopy(t *testing.T) {
 	require.Equal(t, orig, a.String())
 }
 
-func TestGeneratedAdddresses(t *testing.T) {
+func TestGeneratedAddresses(t *testing.T) {
 	addresses := getTestAddresses(t)
 	for _, tt := range addresses {
 		t.Run(tt, func(t *testing.T) {

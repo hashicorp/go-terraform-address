@@ -13,15 +13,23 @@ import (
 	"strings"
 )
 
-type Addressable interface {
-	String() string
-	// TODO: way to get module/other info?
-}
+// ResourceMode is a string representation of the type of address we are
+// modeling.
+type ResourceMode string
+
+const (
+	// DataResourceMode is the resource mode for data sources.
+	DataResourceMode ResourceMode = "data"
+
+	// ManagedResourceMode is the resource mode for managed resources.
+	ManagedResourceMode ResourceMode = "managed"
+)
 
 // Address holds the parsed components of a Terraform address.
 type Address struct {
 	ModulePath   ModulePath
 	ResourceSpec ResourceSpec
+	Mode         ResourceMode
 }
 
 // NewAddress parses the given address `a` into an Address struct. Returns an
@@ -42,6 +50,7 @@ func (a *Address) Clone() *Address {
 	return &Address{
 		mp,
 		a.ResourceSpec,
+		a.Mode,
 	}
 }
 
@@ -50,6 +59,9 @@ func (a *Address) String() string {
 	var prefix string
 	if len(a.ModulePath) > 0 {
 		prefix = a.ModulePath.String() + "."
+	}
+	if a.Mode == DataResourceMode {
+		prefix += "data."
 	}
 	return prefix + a.ResourceSpec.String()
 }
@@ -120,22 +132,4 @@ func (r *ResourceSpec) String() string {
 		return fmt.Sprintf("%s.%s[%s]", r.Type, r.Name, idx)
 	}
 	return fmt.Sprintf("%s.%s", r.Type, r.Name)
-}
-
-// DataSourceAddress holds the parsed components of a data source address.
-type DataSourceAddress struct {
-	ModulePath   ModulePath
-	ResourceSpec ResourceSpec
-}
-
-// NewDataSourceAddress parses the given address `a` into an Address struct. Returns an
-// error if we find a malformed address.
-// [module path][resource spec]
-func NewDataSourceAddress(a string) (*DataSourceAddress, error) {
-	addr, err := Parse(a, []byte(a))
-	if err != nil {
-		return nil, err
-	}
-	// TODO: error check
-	return addr.(*DataSourceAddress), nil
 }
