@@ -1,0 +1,14 @@
+name: hashicorp/go-terraform-address/hashicorp/go-terraform-address
+on:
+  push:
+    branches:
+    - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/circleci/golang:1.14
+    steps:
+    - uses: actions/checkout@v3.5.0
+    - run: go get -v -t -d ./...
+    - run: go test -v ./...
