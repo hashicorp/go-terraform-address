@@ -1,9 +1,6 @@
 name: Build
 on:
   push:
-    branches:
-      - master
-      - convert-hashicorp-go-terraform-address-to-actions-20230403-201655
 jobs:
   build:
     runs-on: ubuntu-latest
