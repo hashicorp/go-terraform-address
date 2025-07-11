@@ -1,3 +1,6 @@
+---
+# 🚨 This repository deprecated and read-only 🚨 
+---
 # tf-address
 
 [![CircleCI](https://circleci.com/gh/hashicorp/go-terraform-address.svg?style=svg)](https://app.circleci.com/pipelines/github/hashicorp/go-terraform-address)
